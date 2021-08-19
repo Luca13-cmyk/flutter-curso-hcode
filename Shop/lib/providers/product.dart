@@ -1,6 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
-class Product with ChangeNotifier{
+import 'package:Shop/utils/constants.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+class Product with ChangeNotifier {
   final String id;
   final String title;
   final String description;
@@ -8,18 +12,31 @@ class Product with ChangeNotifier{
   final String imageUrl;
   bool isFavorite;
 
-  Product({
-    this.id,
-    @required this.title,
-    @required this.description,
-    @required this.price,
-    @required this.imageUrl,
-    this.isFavorite = false
-  });
+  Product(
+      {this.id,
+      @required this.title,
+      @required this.description,
+      @required this.price,
+      @required this.imageUrl,
+      this.isFavorite = false});
 
-  void toggleFavorite() {
+  void _toggleFavorite() {
     isFavorite = !isFavorite;
     notifyListeners();
   }
 
+  Future<void> toggleFavorite(String token, String userId) async {
+    _toggleFavorite();
+    try {
+      final url =
+          '${Constants.BASE_API_URL}/userFavorites/$userId/$id.json?auth=$token';
+
+      final response = await http.put(url, body: json.encode(isFavorite));
+      if (response.statusCode >= 400) {
+        _toggleFavorite();
+      }
+    } catch (error) {
+      _toggleFavorite();
+    }
+  }
 }
